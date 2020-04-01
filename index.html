@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title>Girlfriends Text Analyser</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.6/quill.core.css" rel="stylesheet">
+		<style>
+			body {
+				position: absolute;
+				top: 10px;
+				left: 10px;
+				right: 10px;
+				bottom: 10px;
+				background: lightgray;
+			}
+			.ql-container {
+				position: absolute !important;
+				width: 48%;
+				top: 100px;
+				height: auto !important;
+				bottom: 0;
+				border: 1px solid;
+				background: white;
+			}
+			#div_after {
+				right: 0;
+			}
+			#div_result {
+				width: 100%;
+			}
+			.ql-disabled {
+				display: none;
+			}
+			span {
+				padding: 0 3px;
+			}
+			button {
+				position: absolute;
+				top: 0;
+				right: 0;
+				width: 20%;
+				height: 50px;
+				font-size: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div style="width: 80%; font-size: 24px">See what has changes between two versions of a document</div>
+		<button>Analyse</button>
+		<div style="width: 80%">Insert two versions of you text and then press the "Analyse" button. Red markings are text that has been removed and green markings are text that has been added</div>
+		<div id="div_before"></div>
+		<div id="div_after"></div>
+		<div id="div_result"></div>
+
+		<script>
+			// Create the quill text editors
+			var quill_before = new Quill(div_before, {placeholder: 'Insert the older version here'});
+			var quill_after = new Quill(div_after, {placeholder: 'Insert the newer version here'});
+			var quill_result = new Quill(div_result, {readOnly: true, placeholder: "Result text was empty"});
+
+			// Analyses and displays text with colorized changes when pressing "Analyse" button
+			const Delta = Quill.import('delta');
+			document.querySelector('button').onclick = function () {
+				quill_result.setContents(quill_before.editor.delta.compose(new Delta(quill_before.editor.delta.diff(quill_after.editor.delta).map((op) => {
+					// Define attributes property if needed
+					if (op.retain) return op;
+					if (!op.attributes) op.attributes = {};
+
+					// Replace delete with colorized retain
+					if (op.delete) {
+						op.retain = op.delete;
+						delete op.delete;
+						op.attributes.background = 'red';
+					}
+					// Colorize inserts
+					else if (op.insert) {
+						op.attributes.background = 'green';
+					}
+					return op;
+				}))));
+				quill_result.enable();
+				quill_before.disable();
+				quill_after.disable();
+			};
+		</script>
+	</body>
+</html>
